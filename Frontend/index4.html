@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Code Converter</title>
+    <!-- Load Ace editor library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" type="text/javascript"></script>
+    <!-- Load Ace editor language tools extension for autocompletion -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-language_tools.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar {
+            background-color: #333;
+            color: #fff;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .container {
+            display: flex;
+            height: calc(100vh - 40px); /* Subtract the height of the navbar */
+        }
+
+        .left-column {
+            flex: 1;
+            padding: 20px;
+            background-color: #f1f1f1;
+            border-right: 1px solid #ccc;
+        }
+
+        .right-column {
+            flex: 1;
+            padding: 20px;
+        }
+
+        /* Style for the select dropdowns */
+        select {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        /* Set Ace editor's size */
+        .ace-editor {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <!-- Language selection for source code -->
+        <select id="sourceLanguage">
+            <option value="Python">Python</option>
+            <option value="JavaScript">JavaScript</option>
+            <option value="Java">Java</option>
+            <option value="C++">C++</option>
+            <option value="C">C</option>
+
+            <!-- Add more language options here -->
+        </select>
+
+        <button onclick="getCodeFromEditors()">Convert</button>
+        <button onclick="checkqualityCode()">Check Code Quality</button>
+        <!-- Language selection for destination code -->
+        <select id="targetLanguage">
+            <option value="JavaScript">JavaScript</option>
+            <option value="Python">Python</option>
+            <option value="Java">Java</option>
+            <option value="C++">C++</option>
+            <option value="C">C</option>
+            <!-- Add more language options here -->
+        </select>
+    </div>
+
+    <div class="container">
+        <div class="left-column">
+            <!-- Ace code editor for source code -->
+            <div id="sourceCodeEditor" class="ace-editor"></div>
+        </div>
+        <div class="right-column">
+            <!-- Ace code editor for converted code -->
+            <div id="convertedCodeEditor" class="ace-editor"></div>
+        </div>
+    </div>
+
+    <script>
+        // function convertCode() {
+        //     const sourceCode = document.getElementById("sourceCodeEditor").textContent;
+           
+        //     const sourceLanguage = document.getElementById("sourceLanguage").value;
+        //     const targetLanguage = document.getElementById("targetLanguage").value;
+        //     const targetCode = document.getElementById("convertedCodeEditor");
+        //     // const convertBtn = document.getElementById("convert_button");
+
+        //     const requestBody = {
+        //         sourceCode: sourceCode,
+        //         sourceLanguage: sourceLanguage,
+        //         targetLanguage: targetLanguage
+        //     };
+
+        //     fetch("http://localhost:8080/convert", {
+        //         method: "POST",
+        //         headers: {
+        //             "Content-Type": "application/json"
+        //         },
+        //         body: JSON.stringify(requestBody)
+        //     })
+        //     .then(response => response.text())
+        //     .then(convertedCode => {
+        //         // document.getElementById("convertedCode").innerText = convertedCode;
+        //         targetCode.innerHTML = convertedCode;
+        //     })
+        //     .catch(error => {
+        //         console.error("Error converting code:", error);
+        //     });
+        // }
+
+       
+        // function checkQualityCode() {
+        //     const sourceCode = document.getElementById("sourceCodeEditor").textContent;
+           
+        //     const sourceLanguage = document.getElementById("sourceLanguage").value;
+        //     const targetLanguage = document.getElementById("targetLanguage").value;
+        //     const targetCode = document.getElementById("convertedCodeEditor");
+        //     // const convertBtn = document.getElementById("convert_button");
+
+        //     const requestBody = {
+        //         sourceCode: sourceCode,
+        //         sourceLanguage: sourceLanguage,
+        //         targetLanguage: targetLanguage
+        //     };
+
+        //     fetch("http://localhost:8080/quality", {
+        //         method: "POST",
+        //         headers: {
+        //             "Content-Type": "application/json"
+        //         },
+        //         body: JSON.stringify(requestBody)
+        //     })
+        //     .then(response => response.text())
+        //     .then(convertedCode => {
+        //         // document.getElementById("convertedCode").innerText = convertedCode;
+        //         targetCode.innerText = convertedCode;
+        //     })
+        //     .catch(error => {
+        //         console.error("Error converting code:", error);
+        //     });
+        // }
+
+       
+    </script>
+    <script>
+        // Create Ace editor instances
+        var sourceCodeEditor = ace.edit("sourceCodeEditor");
+        var convertedCodeEditor = ace.edit("convertedCodeEditor");
+
+        // Set the editor theme (optional)
+        sourceCodeEditor.setTheme("ace/theme/chrome");
+        convertedCodeEditor.setTheme("ace/theme/chrome");
+
+        // Set the programming language mode for syntax highlighting
+        sourceCodeEditor.getSession().setMode("ace/mode/python");
+        convertedCodeEditor.getSession().setMode("ace/mode/javascript");
+
+        // Enable autocompletion using Ace language tools extension
+        sourceCodeEditor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true
+        });
+
+        convertedCodeEditor.setOptions({
+            enableBasicAutocompletion: true,
+            enableLiveAutocompletion: true,
+            enableSnippets: true,
+            readOnly:false
+            
+        });
+
+        // Add autocompletion for Python and JavaScript
+        ace.require("ace/ext/language_tools").addCompleter({
+            getCompletions: function(editor, session, pos, prefix, callback) {
+                if (session.getMode().$id === "ace/mode/python") {
+                    // Autocompletion logic for Python
+                    // Example:
+                    var pythonCompletions = [
+                        { value: "print()", caption: "print()" },
+                        { value: "for item in list:", caption: "for item in list:" },
+                        // Add more Python completions as needed
+                    ];
+                    callback(null, pythonCompletions);
+                } else if (session.getMode().$id === "ace/mode/javascript") {
+                    // Autocompletion logic for JavaScript
+                    // Example:
+                    var javascriptCompletions = [
+                        { value: "console.log()", caption: "console.log()" },
+                        { value: "for (var i = 0; i < array.length; i++)", caption: "for (var i = 0; i < array.length; i++)" },
+                        // Add more JavaScript completions as needed
+                    ];
+                    callback(null, javascriptCompletions);
+                }
+            }
+        });
+
+        // Get the code from the editor whenever needed
+        function getCodeFromEditors() {
+            var sourceCode = sourceCodeEditor.getValue();
+            var sourceLanguage = document.getElementById("sourceLanguage").value;
+            var targetLanguage = document.getElementById("targetLanguage").value;
+            // const targetCode = document.getElementById("convertedCodeEditor");
+            // Implement code conversion logic and display the result in the convertedCodeEditor
+            // Example: convertedCodeEditor.setValue(convertedCode);
+
+
+            const requestBody = {
+                sourceCode: sourceCode,
+                sourceLanguage: sourceLanguage,
+                targetLanguage: targetLanguage
+            };
+
+            fetch("http://localhost:8080/convert", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => response.text())
+            .then(convertedCode => {
+                // document.getElementById("convertedCode").innerText = convertedCode;
+                // targetCode.innerHTML = convertedCode;
+                convertedCodeEditor.setValue(convertedCode);
+            })
+            .catch(error => {
+                console.error("Error converting code:", error);
+            });
+        }
+
+
+        function checkqualityCode() {
+            var sourceCode = sourceCodeEditor.getValue();
+            var sourceLanguage = document.getElementById("sourceLanguage").value;
+            var targetLanguage = document.getElementById("targetLanguage").value;
+            // const targetCode = document.getElementById("convertedCodeEditor");
+            // Implement code conversion logic and display the result in the convertedCodeEditor
+            // Example: convertedCodeEditor.setValue(convertedCode);
+
+
+            const requestBody = {
+                sourceCode: sourceCode,
+                sourceLanguage: sourceLanguage,
+                targetLanguage: targetLanguage
+            };
+
+            fetch("http://localhost:8080/quality", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(requestBody)
+            })
+            .then(response => response.text())
+            .then(convertedCode => {
+                // document.getElementById("convertedCode").innerText = convertedCode;
+                // targetCode.innerHTML = convertedCode;
+                convertedCodeEditor.setValue(convertedCode);
+            })
+            .catch(error => {
+                console.error("Error converting code:", error);
+            });
+        }
+    </script>
+</body>
+</html>
